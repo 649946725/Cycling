@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.cycling.dao.RideDao">
+
+    <resultMap id="ride" type="com.cycling.pojo.Ride">
+        <id column="id" property="id"></id>
+        <result column="userid" property="userId"></result>
+        <result column="finish_time" property="finish_time"></result>
+        <result column="duration" property="duration"></result>
+        <result column="distance" property="distance"></result>
+        <result column="avg_speed" property="avg_speed"></result>
+        <result column="mapid" property="mapId"></result>
+    </resultMap>
+
+    <sql id="rideFiled">
+        id,
+        userid,finish_time,duration,distance,avg_speed,mapid
+    </sql>
+
+    <!-- 增加骑行记录 -->
+    <insert id="insertRide" parameterType="com.cycling.pojo.Ride" >
+        insert into ride ( userid,finish_time,duration,distance,avg_speed,mapid)
+        values (#{userId,jdbcType=INTEGER}, #{finish_time,jdbcType=TIMESTAMP},
+                #{duration,jdbcType=VARCHAR}, #{distance,jdbcType=VARCHAR},
+                #{avg_speed,jdbcType=VARCHAR}, #{mapId,jdbcType=INTEGER})
+    </insert>
+
+    <!-- 根据骑行记录id查询单条记录 -->
+    <select id="selectRideById" resultMap="ride" parameterType="Integer">
+        select * from ride where id = #{id}
+    </select>
+
+    <!-- 根据用户id获取用户所有的骑行记录 -->
+    <select id="selectRideByUserId" resultMap="ride" parameterType="Integer">
+        select * from ride where userid = #{userId}
+    </select>
+
+    <!-- 根据骑行记录id删除骑行记录 -->
+    <delete id="deleteRideById" parameterType="Integer">
+        delete from ride where id = #{id}
+    </delete>
+
+    <!-- 根据用户id删除骑行记录 删除全部-->
+    <delete id="deleteRideByUserId" parameterType="Integer">
+        delete from ride where userid = #{userId}
+    </delete>
+
+
+
+</mapper>

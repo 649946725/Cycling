@@ -1,0 +1,30 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cycling.dao.TopicDao">
+    <resultMap id="topic" type="com.cycling.pojo.Topic">
+        <id column="id" property="id"></id>
+        <result column="topic_name" property="topicName"></result>
+    </resultMap>
+    <sql id="topicFiled">
+        id
+        ,topic_name
+    </sql>
+    <!--增加话题-->
+    <insert id="addTopic">
+        insert into topic (topic_name)
+        values (#{topicName,jdbcType=VARCHAR})
+    </insert>
+    <!--查询所有话题-->
+    <select id="findAll" resultMap="topic">
+        select
+        <include refid="topicFiled"></include>
+        from topic
+    </select>
+    <!--通过话题名模糊查询-->
+    <select id="findByTopicName" resultMap="topic">
+        select
+        <include refid="topicFiled"></include>
+        from topic where topic_name like "%"#{topicName,jdbcType=VARCHAR}"%"
+    </select>
+</mapper>

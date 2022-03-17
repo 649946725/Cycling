@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <!-- 高亮显示：-Dlog4j.skipJansi=false -->
+        <property name="PATTERN">
+            %clr{%d{yyyy-MM-dd HH:mm:ss.SSS}} %clr{%-5level} %clr{[%t]} %clr{%c{1.}.%M(%L)}%clr{:} %msg%n
+        </property>
+    </Properties>
+
+    <Appenders>
+        <!--这个输出控制台的配置 -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <!-- 控制台只输出level及以上级别的信息(onMatch),其他的直接拒绝(onMismatch) -->
+            <ThresholdFilter level="trace" onMatch="ACCEPT"
+                             onMismatch="DENY"/>
+            <PatternLayout pattern="${PATTERN}"/>
+        </Console>
+    </Appenders>
+
+    <!--然后定义logger，只有定义了logger并引入的appender，appender才会生效 -->
+    <Loggers>
+        <!-- 配置日志的根节点 -->
+        <root level="info">
+            <appender-ref ref="Console"/>
+        </root>
+
+    </Loggers>
+</Configuration>

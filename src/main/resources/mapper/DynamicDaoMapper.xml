@@ -1,0 +1,159 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cycling.dao.DynamicDao">
+
+    <resultMap id="dynamic" type="com.cycling.pojo.Dynamic">
+        <id column="id" property="id"></id>
+        <result column="title" property="title"></result>
+        <result column="content" property="content"></result>
+        <result column="time" property="time"></result>
+        <result column="author_id" property="authorId"></result>
+        <result column="position" property="position"></result>
+    </resultMap>
+
+    <resultMap id="dynamicShow" type="com.cycling.pojo.dto.DynamicShow">
+        <id column="id" property="id"></id>
+        <result column="avatar" property="avatar"></result>
+        <result column="username" property="username"></result>
+        <result column="level" property="level"></result>
+        <result column="title" property="title"></result>
+        <result column="content" property="content"></result>
+        <collection property="imgs" resultMap="imageMap">
+        </collection>
+    </resultMap>
+
+    <resultMap id="imageMap" type="com.cycling.pojo.dto.DynamicShowImage">
+        <id property="imgId" column="image_id"></id>
+        <result property="imageUrl" column="image_url"></result>
+    </resultMap>
+
+    <resultMap id="dynamicDetailWithComment" type="com.cycling.pojo.dto.DynamicDetailWithComment">
+        <id column="id" property="id"></id>
+        <result property="avatar" column="avatar"></result>
+        <result property="username" column="username"></result>
+        <result property="level" column="level"></result>
+        <result property="title" column="title"></result>
+        <result property="content" column="content"></result>
+        <collection property="imgs" resultMap="imageMap"></collection>
+    </resultMap>
+
+    <resultMap id="commentMap" type="com.cycling.pojo.dto.CommentShow">
+        <id property="commentId" column="comment_id"></id>
+        <result property="userId" column="comment_userid"></result>
+        <result property="commentAvatar" column="comment_avatar"></result>
+        <result property="commentUsername" column="comment_username"></result>
+        <result property="commentLevel" column="comment_level"></result>
+        <result property="commentContent" column="comment_content"></result>
+        <result property="commentTime" column="comment_time"></result>
+    </resultMap>
+
+    <sql id="dynamicFiled">
+        id
+        ,title,content,`time`,author_id,`position`
+    </sql>
+
+    <sql id="dynamicShowGeneralSql">
+        dynamic_id
+        as id,
+               user_info.avatar        as avatar,
+               user_info.username      as username,
+               user_info.level         as level,
+               dynamic.title           as title,
+               dynamic.content         as content,
+               dynamic_image.id        as image_id,
+               dynamic_image.image_url as image_url
+    </sql>
+    <!--插入动态-->
+    <insert id="addDynamic" parameterType="com.cycling.pojo.Dynamic"
+            useGeneratedKeys="true" keyProperty="id"
+    >
+        insert into dynamic(title, content, time, author_id, position)
+        values (#{title,jdbcType=VARCHAR}, #{content,jdbcType=LONGVARCHAR}, #{time,jdbcType=TIMESTAMP},
+                #{authorId,jdbcType=INTEGER}, #{position,jdbcType=VARCHAR})
+    </insert>
+    <!--删除动态-->
+    <delete id="deleteDynamic">
+        delete
+        from dynamic
+        where id = #{id,jdbcType=INTEGER}
+    </delete>
+    <!--根据用户id查询动态-->
+    <select id="findDynamicByUser" resultMap="dynamic">
+        select
+        <include refid="dynamicFiled"></include>
+        from dynamic
+        where id = #{id}
+    </select>
+    <!--根据关注查询动态-->
+    <select id="findDynamicByAttention" resultMap="dynamicShow">
+        select dynamic_id              as id,
+               user_info.avatar        as avatar,
+               user_info.username      as username,
+               user_info.level         as level,
+               dynamic.title           as title,
+               dynamic.content         as content,
+               dynamic_image.id        as image_id,
+               dynamic_image.image_url as image_url
+        from dynamic
+                 join fans on fansid = #{id} and fans.userid = dynamic.author_id
+                 join dynamic_image on dynamic.id = dynamic_image.dynamic_id
+                 join user_info on user_info.userid = dynamic.author_id
+    </select>
+    <!--根据地区查询动态-->
+    <select id="findDynamicByArea" resultType="com.cycling.pojo.Dynamic">
+        select
+        <include refid="dynamicFiled"></include>
+        from dynamic
+        where position = #{area}
+    </select>
+    <select id="findDynamicRecommend" resultMap="dynamicShow">
+        select dynamic_id              as id,
+               user_info.avatar        as avatar,
+               user_info.username      as username,
+               user_info.level         as level,
+               dynamic.title           as title,
+               dynamic.content         as content,
+               dynamic_image.id        as image_id,
+               dynamic_image.image_url as image_url
+        from dynamic
+                 join user_info on dynamic.author_id = user_info.userid
+                 join dynamic_image on dynamic.id = dynamic_image.dynamic_id
+
+    </select>
+    <select id="findDynamicById" resultMap="dynamicDetailWithComment">
+        select dynamic.id              as id,
+               user_info.avatar        as avatar,
+               user_info.username      as username,
+               user_info.level         as level,
+               dynamic.title           as title,
+               dynamic.content         as content,
+               dynamic_image.id        as image_id,
+               dynamic_image.image_url as image_url
+        from dynamic
+                 join dynamic_image on dynamic.id = #{id} and dynamic.id = dynamic_image.dynamic_id
+                 join user_info on user_info.userid = dynamic.author_id
+
+    </select>
+
+    <select id="findCommentById" resultMap="commentMap">
+        select comment.id         as comment_id,
+               comment.userid     as comment_userid,
+               user_info.avatar   as comment_avatar,
+               user_info.username as comment_username,
+               user_info.level    as comment_level,
+               comment.content    as comment_content,
+               comment.time       as comment_time
+        from comment
+                 join user_info on comment.userid = user_info.userid and comment.dynamicid = #{id};
+
+    </select>
+    <select id="findDynamicByContent" resultMap="dynamicShow">
+        select
+        <include refid="dynamicShowGeneralSql"></include>
+        from dynamic
+        join user_info on user_info.userid = dynamic.author_id
+        join dynamic_image on dynamic_image.dynamic_id = dynamic.id
+        where dynamic.content like "%"#{content}"%"
+    </select>
+</mapper>

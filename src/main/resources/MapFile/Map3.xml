@@ -1,0 +1,40 @@
+<Map>
+    <Centre>
+        <latitude value="35.634218" />
+        <longtitude value="110.849836" />
+    </Centre>
+    <Line>
+        <Point>
+            <latitude value="35.634418" />
+            <longtitude value="110.849936" />
+        </Point>
+        <Point>
+            <latitude value="35.634438" />
+            <longtitude value="110.844936" />
+        </Point>
+        <Point>
+            <latitude value="35.639418" />
+            <longtitude value="110.849136" />
+        </Point>
+        <Point>
+            <latitude value="35.634318" />
+            <longtitude value="110.879936" />
+        </Point>
+        <Point>
+            <latitude value="35.634438" />
+            <longtitude value="110.849536" />
+        </Point>
+        <Point>
+            <latitude value="35.631418" />
+            <longtitude value="110.842936" />
+        </Point>
+        <Point>
+            <latitude value="35.614418" />
+            <longtitude value="110.849936" />
+        </Point>
+    </Line>
+    <Info>
+        <time>2小时</time>
+        <long>3.2公里</long>
+    </Info>
+</Map>

@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.cycling.dao.UserDao">
+    <resultMap id="userInfo" type="com.cycling.pojo.UserInfo">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="userid" property="userId" jdbcType="BIGINT"/>
+        <result column="username" property="username" jdbcType="VARCHAR"/>
+        <result column="sex" property="sex" jdbcType="INTEGER"/>
+        <result column="height" property="height" jdbcType="FLOAT"/>
+        <result column="weight" property="weight" jdbcType="FLOAT"/>
+        <result column="birthday" property="birthday" jdbcType="DATE"/>
+        <result column="address" property="address" jdbcType="VARCHAR"/>
+        <result column="introduction" property="introduction" jdbcType="VARCHAR"/>
+        <result column="phone" property="phone" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="ownInfo" type="com.cycling.pojo.dto.OwnInfo">
+        <result column="avatar" property="avatar" jdbcType="VARCHAR"/>
+        <result column="level" property="level" jdbcType="INTEGER"/>
+        <result column="exp" property="exp" jdbcType="BIGINT"/>
+        <result column="introduction" property="introduction" jdbcType="VARCHAR"/>
+        <result column="username" property="username" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="userInfo">
+        id,userid,username,sex,height,weight,birthday,address,avatar,introduction
+    </sql>
+
+    <sql id="dynamic">
+        dynamic.id as id,title,username,content as `body`,author_id as userId,dynamic.time as `time`,avatar
+    </sql>
+
+    <sql id="active">
+        active.id as id,title,username,synopsis as `body`,active.time as `time`,avatar
+    </sql>
+
+    <sql id="userShow">
+        userid,avatar,level,username
+    </sql>
+
+    <sql id="ownInfo">
+        avatar,level,sex,exp,introduction,username
+    </sql>
+
+    <sql id="BASE_COLUMN_INSERT">
+        id,password,method,wx_openid,qq_openid,phone,create_time,last_login_time,salt
+    </sql>
+
+    <sql id="fansAndFocus">
+        avatar,username,sex,introduction
+    </sql>
+    <select id="selectByPhone" resultType="com.cycling.pojo.User">
+        select
+        <include refid="BASE_COLUMN_INSERT"/>
+        from user
+        where user.phone=#{phone}
+    </select>
+    <select id="selectById" resultType="com.cycling.pojo.User">
+        select
+        <include refid="BASE_COLUMN_INSERT"/>
+        from user
+        where user.id=#{id}
+    </select>
+
+
+    <select id="selectUserInfoById" resultMap="userInfo">
+        select
+        <include refid="userInfo">
+        </include>,(select phone from user where id = #{id,jdbcType=BIGINT}) as phone
+        from user_info where userid = #{id,jdbcType=BIGINT}
+    </select>
+
+    <select id="getMyInfo" resultMap="ownInfo">
+        select
+        <include refid="ownInfo">
+        </include>
+        from user_info where userid = #{id,jdbcType=BIGINT}
+    </select>
+
+    <select id="getUserShowInfo" resultType="com.cycling.pojo.dto.UserShow">
+        select
+        <include refid="userShow">
+        </include>
+        from user_info where userid = #{id,jdbcType=BIGINT}
+    </select>
+
+    <select id="getRelatedCount" resultType="com.cycling.pojo.dto.RelatedCount">
+        select (select count(id) from fans where userid = #{id,jdbcType=BIGINT}) as fansCount,
+               (select count(id) from fans where fansid = #{id,jdbcType=BIGINT}) as focusCount,
+               praisedCount,
+               visitorCount
+        from user_info
+        where userid = #{id,jdbcType=BIGINT}
+    </select>
+
+    <update id="updateInfo">
+        update user_info
+        <set>
+            <if test="username != null">
+                username = #{username,jdbcType=VARCHAR},
+            </if>
+            <if test="sex != null">
+                sex = #{sex,jdbcType=INTEGER},
+            </if>
+            <if test="height != null">
+                height = #{height,jdbcType=FLOAT},
+            </if>
+            <if test="weight != null">
+                weight = #{weight,jdbcType=FLOAT},
+            </if>
+            <if test="birthday != null">
+                birthday = #{birthday,jdbcType=DATE},
+            </if>
+            <if test="address != null">
+                address = #{address,jdbcType=VARCHAR},
+            </if>
+            <if test="avatar != null">
+                avatar = #{avatar,jdbcType=VARCHAR},
+            </if>
+            <if test="introduction != null">
+                introduction = #{introduction,jdbcType=VARCHAR},
+            </if>
+            <if test="level != null">
+                level = #{level,jdbcType=INTEGER},
+            </if>
+            <if test="exp != null">
+                exp = #{exp,jdbcType=BIGINT},
+            </if>
+        </set>
+        where userid = #{userId,jdbcType=BIGINT}
+    </update>
+
+    <select id="getFansAndSimpleUserInfo" resultType="com.cycling.pojo.dto.FansAndFocusDto">
+        select fansid as relatedUserId,fans.id as id,
+        <include refid="fansAndFocus">
+        </include>,
+        (select count(child.id) from fans as child where child.userid = fans.fansid and child.fansid =
+        #{userId,jdbcType=BIGINT}) as mutualConcern
+        from fans join user_info on fans.fansid = user_info.userid where fans.userid = #{userId,jdbcType=BIGINT}
+        <if test="minId != null">
+            and fans.id &lt; #{minId,jdbcType=BIGINT}
+        </if>
+        order by fans.focusTime desc,fans.id desc limit #{num,jdbcType=INTEGER}
+    </select>
+
+    <select id="getFocusedAndSimpleUserInfo" resultType="com.cycling.pojo.dto.FansAndFocusDto">
+        select fans.userid as relatedUserId,fans.id as id,
+        <include refid="fansAndFocus">
+        </include>,
+        (select count(child.id) from fans as child where child.fansid = fans.userid and child.userid =
+        #{userId,jdbcType=BIGINT}) as mutualConcern
+        from fans join user_info on fans.userid = user_info.userid where fans.fansid = #{userId,jdbcType=BIGINT}
+        <if test="minId != null">
+            and fans.id &lt; #{minId,jdbcType=BIGINT}
+        </if>
+        order by fans.focusTime desc,fans.id desc limit #{num,jdbcType=INTEGER}
+    </select>
+
+    <select id="getFocusedUserId" resultType="java.lang.Integer">
+        select fans.userid
+        from fans
+        where fans.fansid = #{userId,jdbcType=BIGINT}
+    </select>
+
+    <delete id="cancelFocusedById">
+        delete
+        from fans
+        where fans.id = #{id,jdbcType=BIGINT}
+    </delete>
+
+    <insert id="focus">
+        insert into fans(userid, fansid, focustime)
+        values (#{focusedUserId,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, #{time,jdbcType=TIMESTAMP})
+    </insert>
+
+    <delete id="cancelFocusedByUser">
+        delete
+        from fans
+        where userid = #{focusedUserId,jdbcType=BIGINT}
+          and fansid = #{userId,jdbcType=BIGINT}
+    </delete>
+
+
+    <select id="getPublishOfDynamic" resultType="com.cycling.pojo.dto.SimpleDynamicOrActive">
+        select
+        <include refid="dynamic">
+        </include>
+        from dynamic
+        join user_info on user_info.userid = dynamic.author_id
+        where dynamic.author_id = #{userId,jdbcType=BIGINT}
+        <if test="minId != null">
+            and dynamic.id &lt; #{minId,jdbcType=BIGINT}
+        </if>
+        order by dynamic.time desc
+        limit #{num,jdbcType=INTEGER}
+    </select>
+
+    <select id="getPublishOfActive" resultType="com.cycling.pojo.dto.SimpleDynamicOrActive">
+        select
+        <include refid="active">
+        </include>
+        from active join user_info on user_info.userid = active.authorid where active.authorid =
+        #{userId,jdbcType=BIGINT}
+        <if test="minId != null">
+            and active.id &lt; #{minId,jdbcType=BIGINT}
+        </if>
+        order by active.time desc
+        limit #{num,jdbcType=INTEGER}
+    </select>
+
+    <select id="getCollectOfDynamic" resultType="com.cycling.pojo.dto.SimpleDynamicOrActive">
+        select
+        <include refid="dynamic">
+        </include>
+        from dynamic join collection_dynamic on collection_dynamic.dynamic_id = dynamic.id join user_info on
+        user_info.userid = dynamic.author_id where collection_dynamic.userid = #{userId,jdbcType=BIGINT}
+        <if test="minId != null">
+            and collection_dynamic.id &lt; #{minId,jdbcType=BIGINT}
+        </if>
+        order by collection_dynamic.time desc
+        limit #{num,jdbcType=INTEGER}
+    </select>
+
+    <select id="getCollectOfActive" resultType="com.cycling.pojo.dto.SimpleDynamicOrActive">
+        select
+        <include refid="active">
+        </include>
+        from active join collection_active on active.id = collection_active.active_id
+        join user_info on active.authorid = user_info.userid
+        where collection_active.userid = #{userId,jdbcType=BIGINT}
+        <if test="minId != null">
+            and active.id &lt; #{minId,jdbcType=BIGINT}
+        </if>
+        order by collection_active.time desc
+        limit #{num,jdbcType=INTEGER}
+    </select>
+
+    <delete id="deleteUser">
+        delete
+        from user
+        where user.id = #{userId,jdbcType=BIGINT}
+    </delete>
+
+    <delete id="deleteUserInfo">
+        delete
+        from user_info
+        where user_info.userid = #{userId,jdbcType=BIGINT}
+    </delete>
+
+    <delete id="deleteUserRelation">
+        delete
+        from fans
+        where userid = #{userId,jdbcType=BIGINT}
+           or fansid = #{userId,jdbcType=BIGINT}
+    </delete>
+
+    <select id="findChatHistory" resultType="com.cycling.pojo.Chat">
+        select id, content, type, send as sender, receiver, time
+        from chat
+        where ((send = #{sender,jdbcType=BIGINT} and receiver = #{receiver,jdbcType=BIGINT})
+        or (send = #{receiver,jdbcType=BIGINT} and receiver = #{sender,jdbcType=BIGINT}))
+        <if test="pageId != null">
+            and id &lt; #{pageId,jdbcType=BIGINT}
+        </if>
+        order by time desc
+        limit #{num,jdbcType=INTEGER}
+    </select>
+
+    <select id="findAvatarById" resultType="java.lang.String">
+        select avatar
+        from user_info
+        where userid = #{id,jdbcType=BIGINT}
+    </select>
+
+    <insert id="insertChatHistory">
+        insert into chat(content, type, send, receiver, time)
+        VALUES (#{content,jdbcType=LONGVARCHAR}, #{type,jdbcType=INTEGER}, #{sender,jdbcType=BIGINT},
+                #{receiver,jdbcType=BIGINT}, #{time,jdbcType=TIMESTAMP})
+    </insert>
+
+    <insert id="registerUser">
+        insert into user(password, salt, method, wx_openid, qq_openid, phone, create_time, last_login_time)
+        VALUES (#{password,jdbcType=VARCHAR}, #{salt,jdbcType=VARCHAR}, #{method,jdbcType=VARCHAR},
+                #{wxOpenid,jdbcType=VARCHAR}, #{qqOpenid,jdbcType=VARCHAR}, #{phone,jdbcType=VARCHAR},
+                #{createTime,jdbcType=TIMESTAMP}, #{lastLoginTime,jdbcType=TIMESTAMP})
+    </insert>
+</mapper>

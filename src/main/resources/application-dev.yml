@@ -1,0 +1,65 @@
+# 设置服务端口号
+server:
+  port: 5678
+  servlet:
+    context-path: /
+# 设置数据库连接相关参数
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/cycling?useUnicode=true&characterEncoding=utf8
+    username: root
+    password: 123456
+  devtools:
+    restart:
+      additional-paths: src/main/java
+    livereload:
+      enabled: false
+  #redis配置
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 10000
+    cacheTimeout: 1800
+    specialTimeout: 1800
+  #rabbitMq配置信息
+  rabbitmq:
+    host: 101.42.242.65
+    port: 5672
+    username: admin
+    password: yx668234
+    listener:
+      simple:
+        acknowledge-mode: manual
+  jackson:
+    #忽略null
+    default-property-inclusion: non_null
+
+# 设置mybatis相关配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.cycling.pojo,com.cycling.view
+  configuration:
+    map-underscore-to-camel-case: on
+
+
+# 控制台日志设置
+logging:
+  config: classpath:config/log4j2.xml
+  level:
+    com.cycling.dao: info
+    org.springframework.web: info
+
+# pagehelper
+pagehelper:
+  reasonable: true
+  support-methods-arguments: true
+  params: countSql
+  helper-dialect: mysql
+
+# 七牛云配置信息
+qiniu:
+  accesskey: iBJyl5ptB_ark_zCscuw70lHg2xcCeAd6Gp30_u3
+  secretkey: lsZ2bkURiIyUkJHjIYOr91ZLF4qH4rWEIsYO_sjj
+  bucket: cycling-avatar

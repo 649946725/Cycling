@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cycling.dao.ActiveDao">
+    <resultMap id="BaseResultMap" type="com.cycling.pojo.Active">
+        <constructor>
+            <arg column="id" jdbcType="BIGINT" javaType="java.lang.Long"/>
+            <arg column="title" jdbcType="VARCHAR" javaType="java.lang.String"/>
+            <arg column="map_id" jdbcType="BIGINT" javaType="java.lang.Long"/>
+            <arg column="authorid" jdbcType="BIGINT" javaType="java.lang.Long"/>
+            <arg column="start_time" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+            <arg column="stop_time" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+            <arg column="contact" jdbcType="VARCHAR" javaType="java.lang.String"/>
+            <arg column="ischeck" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+            <arg column="synopsis" jdbcType="LONGVARCHAR" javaType="java.lang.String"/>
+            <arg column="danger" jdbcType="LONGVARCHAR" javaType="java.lang.String"/>
+        </constructor>
+    </resultMap>
+    <!--    <sql id="Blob_Column_List" >-->
+    <!--    synopsis, danger-->
+    <!--  </sql>-->
+    <sql id="Base_Filed">
+        id, title, map_id,
+      authorid, start_time, stop_time,
+      contact, ischeck, synopsis,
+      danger
+    </sql>
+    <insert id="insert" parameterType="com.cycling.pojo.Active">
+        insert into active (id, title, map_id,
+                            authorid, start_time, stop_time,
+                            contact, ischeck, synopsis,
+                            danger)
+        values (#{id,jdbcType=BIGINT}, #{title,jdbcType=VARCHAR}, #{mapId,jdbcType=BIGINT},
+                #{authorid,jdbcType=BIGINT}, #{startTime,jdbcType=TIMESTAMP}, #{stopTime,jdbcType=TIMESTAMP},
+                #{contact,jdbcType=VARCHAR}, #{ischeck,jdbcType=INTEGER}, #{synopsis,jdbcType=LONGVARCHAR},
+                #{danger,jdbcType=LONGVARCHAR})
+    </insert>
+    <insert id="insertSelective" parameterType="com.cycling.pojo.Active">
+        insert into active
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="title != null">
+                title,
+            </if>
+            <if test="mapId != null">
+                map_id,
+            </if>
+            <if test="authorid != null">
+                authorid,
+            </if>
+            <if test="startTime != null">
+                start_time,
+            </if>
+            <if test="stopTime != null">
+                stop_time,
+            </if>
+            <if test="contact != null">
+                contact,
+            </if>
+            <if test="ischeck != null">
+                ischeck,
+            </if>
+            <if test="synopsis != null">
+                synopsis,
+            </if>
+            <if test="danger != null">
+                danger,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=BIGINT},
+            </if>
+            <if test="title != null">
+                #{title,jdbcType=VARCHAR},
+            </if>
+            <if test="mapId != null">
+                #{mapId,jdbcType=BIGINT},
+            </if>
+            <if test="authorid != null">
+                #{authorid,jdbcType=BIGINT},
+            </if>
+            <if test="startTime != null">
+                #{startTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="stopTime != null">
+                #{stopTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="contact != null">
+                #{contact,jdbcType=VARCHAR},
+            </if>
+            <if test="ischeck != null">
+                #{ischeck,jdbcType=INTEGER},
+            </if>
+            <if test="synopsis != null">
+                #{synopsis,jdbcType=LONGVARCHAR},
+            </if>
+            <if test="danger != null">
+                #{danger,jdbcType=LONGVARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <!--查询所有审核通过活动-->
+    <select id="getAllActive" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Filed">
+        </include>
+        from active
+        where ischeck = 1
+    </select>
+    <select id="getAllActiveWithoutCheck" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Filed">
+        </include>
+        from active
+        where ischeck = 0
+    </select>
+    <select id="getAllAvtiveBypage" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Filed">
+        </include>
+        from active
+        where ischeck = 1 and id &lt; #{id}
+        order by id desc
+        limit 20
+    </select>
+
+    <resultMap id="limit" type="com.cycling.pojo.LimitActivity">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="depart" property="depart" jdbcType="VARCHAR"/>
+        <result column="end" property="end" jdbcType="VARCHAR"/>
+        <result column="start_time" property="startTime" jdbcType="TIMESTAMP"/>
+        <result column="end_time" property="endTime" jdbcType="TIMESTAMP"/>
+        <result column="activity_start_Time" property="activityTime" jdbcType="TIMESTAMP"/>
+        <result column="remain" property="remain" jdbcType="INTEGER"/>
+        <result column="status" property="status"/>
+        <association property="price" select="findPriceById" column="price" javaType="com.cycling.pojo.Price">
+        </association>
+    </resultMap>
+
+    <select id="findAllLimitActivity" resultMap="limit">
+        select id,
+               depart,
+               `end`,
+               start_time,
+               end_time,
+               activity_start_Time,
+               remain,
+               price,
+               (select count(*)
+                from participation
+                where user_id = #{userId,jdbcType=INTEGER}
+                  and limit_activity_id = limit_activity.id) as status
+        from limit_activity
+        order by start_time desc
+    </select>
+
+    <select id="findPriceById" resultType="com.cycling.pojo.Price">
+        select id, images, introduction, remain, money, title
+        from price
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+
+    <delete id="minusRemain">
+        update limit_activity
+        set remain = remain - 1
+        where id = #{id,jdbcType=BIGINT}
+          and remain > 0
+    </delete>
+
+    <insert id="insertParticipation">
+        insert into participation(limit_activity_id, user_id, time)
+        values (#{limitActivityId,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, #{time,jdbcType=TIMESTAMP})
+    </insert>
+
+    <select id="findRemain" resultType="java.lang.Integer">
+        select remain
+        from limit_activity
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+
+    <select id="hasParticipation" resultType="java.lang.Integer">
+        select count(*)
+        from participation
+        where limit_activity_id = #{limitActivityId,jdbcType=BIGINT}
+          and user_id = #{userId,jdbcType=BIGINT}
+    </select>
+</mapper>

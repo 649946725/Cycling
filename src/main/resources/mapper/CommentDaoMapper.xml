@@ -1,0 +1,35 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cycling.dao.CommentDao">
+    <resultMap id="comment" type="com.cycling.pojo.Comment">
+        <id column="id" property="id"></id>
+        <result column="dynamic_id" property="dynamicId"></result>
+        <result column="user_id" property="userId"></result>
+        <result column="content" property="content"></result>
+        <result column="time" property="time"></result>
+    </resultMap>
+    <sql id="commentFiled">
+        id
+        ,dynamic_id,user_id,content,`time`
+    </sql>
+    <!--添加评论-->
+    <insert id="addComment">
+        insert into comment (dynamic_id, user_id, content, time)
+        values (#{dynamicId,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, #{content,jdbcType=LONGVARCHAR},
+                #{time,jdbcType=TIMESTAMP})
+    </insert>
+    <!--根据id删除评论-->
+    <delete id="deleteComment">
+        delete
+        from comment
+        where id = #{id}
+    </delete>
+    <!--根据动态id查询评论-->
+    <select id="findCommentByDynamic" resultMap="comment">
+        select
+        <include refid="commentFiled"></include>
+        from comment
+        where dynamic_id = #{id}
+    </select>
+</mapper>

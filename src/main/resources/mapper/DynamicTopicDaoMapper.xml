@@ -1,0 +1,10 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cycling.dao.DynamicTopicDao">
+
+    <insert id="addDynamicTopic">
+        insert into dynamic_topic (dynamic_id, topic_id)
+        values (#{dynamicId,jdbcType=BIGINT}, #{topicId,jdbcType=BIGINT})
+    </insert>
+</mapper>
